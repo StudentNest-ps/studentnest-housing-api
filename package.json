@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "nodemon app.js",
     "dev": "nodemon app.js"
   },
   "keywords": [],
@@ -15,7 +15,9 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.13.2"
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.13.2",
+    "soft_proj": "file:"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
