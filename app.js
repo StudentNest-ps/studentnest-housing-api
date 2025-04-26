@@ -66,6 +66,11 @@ app.post('/api/login', async (req, res) => {
 const propertyRoutes = require('./routes/properties.route');
 app.use('/api/properties', propertyRoutes);
 
+const bookingRoutes = require('./routes/booking.route');
+app.use('/api/bookings', bookingRoutes);
+
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
