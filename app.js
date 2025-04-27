@@ -69,6 +69,10 @@ app.use('/api/properties', propertyRoutes);
 const bookingRoutes = require('./routes/booking.route');
 app.use('/api/bookings', bookingRoutes);
 
+// Payment routes
+const paymentRoutes = require('./routes/payment.route');
+app.use('/api/payments', paymentRoutes);
+
 
 
 const PORT = process.env.PORT || 3000;
