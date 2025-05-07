@@ -93,6 +93,11 @@ app.use('/api/chats', chatRoutes);
 const notificationRoutes = require('./routes/notification.route');
 app.use('/api/notifications', notificationRoutes);
 
+// Review routes
+const reviewRoutes = require('./routes/review.route');
+app.use('/api/reviews', reviewRoutes);
+
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
