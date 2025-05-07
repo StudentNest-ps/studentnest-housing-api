@@ -79,6 +79,15 @@ app.use('/api/properties', availabilityRoutes);
 
 
 
+// Message routes
+const messageRoutes = require('./routes/message.route');
+app.use('/api/messages', messageRoutes);
+
+// Chat routes
+const chatRoutes = require('./routes/chat.route');
+app.use('/api/chats', chatRoutes);
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
