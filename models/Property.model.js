@@ -6,6 +6,7 @@ const propertySchema = new mongoose.Schema({
   type: { type: String, enum: ['room', 'apartment'] },
   price: Number,
   address: String,
+  blockedDates: [Date],
   location: {
     lat: Number,
     lng: Number
@@ -21,6 +22,9 @@ const propertySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   }
-}, { timestamps: true });
+}, 
+{ timestamps: true 
+
+});
 
 module.exports = mongoose.model('Property', propertySchema);
