@@ -42,5 +42,4 @@ router.get('/analytics', async (req, res) => {
   const recentSignups = await User.find().sort({ createdAt: -1 }).limit(5);
   res.json({ userCount, propertyCount, bookingCount, recentSignups });
 });
-
 module.exports = router;
