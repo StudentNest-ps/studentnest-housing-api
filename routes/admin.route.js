@@ -11,13 +11,13 @@ const router = express.Router();
 router.use(protect, isAdmin);
 
 // GET /api/admin/users
-router.get('/users', async (req, res) => {
+router.get('/users', async (_, res) => {
   const users = await User.find().select('-password');
   res.json(users);
 });
 
 // GET /api/admin/properties
-router.get('/properties', async (req, res) => {
+router.get('/properties', async (_, res) => {
   const properties = await Property.find();
   res.json(properties);
 });
@@ -35,7 +35,7 @@ router.delete('/properties/:id', async (req, res) => {
 });
 
 // GET /api/admin/analytics
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', async ( _, res) => {
   const userCount = await User.countDocuments();
   const propertyCount = await Property.countDocuments();
   const bookingCount = await Booking.countDocuments();
