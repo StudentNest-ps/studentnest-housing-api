@@ -101,6 +101,9 @@ app.use('/api/reviews', reviewRoutes);
 const adminRoutes = require('./routes/admin.route');
 app.use('/api/admin', adminRoutes);
 
+//Report routes
+const reportRoutes = require('./routes/report.route');
+app.use('/api/reports', reportRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
