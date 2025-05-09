@@ -97,6 +97,9 @@ app.use('/api/notifications', notificationRoutes);
 const reviewRoutes = require('./routes/review.route');
 app.use('/api/reviews', reviewRoutes);
 
+//admin routes
+const adminRoutes = require('./routes/admin.route');
+app.use('/api/admin', adminRoutes);
 
 
 const PORT = process.env.PORT || 3000;
