@@ -1,5 +1,5 @@
 app.post('/api/signup', async (req, res) => {
-    const { email, username, phoneNumber, password, confirmPassword, role } = req.body;
+    const { email, username, phoneNumber, password, confirmPassword } = req.body;
 
     if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match.' });
 
@@ -7,7 +7,7 @@ app.post('/api/signup', async (req, res) => {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: 'Email already registered.' });
 
-        const newUser = new User({ email, username, phoneNumber, password, role });
+        const newUser = new User({ email, username, phoneNumber, password, role: 'student' });
         await newUser.save();
 
         res.status(201).json({ message: 'User registered successfully.' });
