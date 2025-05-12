@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User.model');
+const bodyParser = require('body-parser');
 
 // Load environment variables
 dotenv.config();
@@ -105,7 +106,11 @@ app.use('/api/admin', adminRoutes);
 const reportRoutes = require('./routes/report.route');
 app.use('/api/reports', reportRoutes);
 
-const PORT = process.env.PORT || 3000;
+// payment with lahza 
+const lahzaRoutes = require('./routes/lahzapayments.route');
+app.use('/api/lahza', lahzaRoutes);
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
