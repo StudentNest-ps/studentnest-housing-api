@@ -16,10 +16,43 @@ router.get('/users', async (_, res) => {
   res.json(users);
 });
 
+// GET /api/admin/users/role/:role
+router.get('/users/role/:role', async (req, res) => {
+  const { role } = req.params;
+  
+  // Validate role parameter
+  if (!['student', 'owner', 'admin'].includes(role)) {
+    return res.status(400).json({ message: 'Invalid role. Must be student, owner, or admin' });
+  }
+  
+  const users = await User.find({ role }).select('-password');
+  res.json(users);
+});
+
 // GET /api/admin/properties
 router.get('/properties', async (_, res) => {
-  const properties = await Property.find();
-  res.json(properties);
+  try {
+    const properties = await Property.find()
+      .populate({
+        path: 'ownerId',
+        select: 'username phoneNumber' // Only select the fields we need
+      });
+    
+    // Transform the response to include owner info directly
+    const propertiesWithOwnerInfo = properties.map(property => {
+      const propertyObj = property.toObject();
+      return {
+        ...propertyObj,
+        ownerName: propertyObj.ownerId?.username || 'Unknown',
+        ownerPhoneNumber: propertyObj.ownerId?.phoneNumber || 'Unknown',
+        ownerId: propertyObj.ownerId?._id // Keep the original ownerId
+      };
+    });
+    
+    res.json(propertiesWithOwnerInfo);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching properties', error: error.message });
+  }
 });
 
 // DELETE /api/admin/users/:id
