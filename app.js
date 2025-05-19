@@ -110,6 +110,12 @@ app.use('/api/reports', reportRoutes);
 const lahzaRoutes = require('./routes/lahzapayments.route');
 app.use('/api/lahza', lahzaRoutes);
 
+// Import owner routes
+const ownerRoutes = require('./routes/owner.route');
+
+// Use owner routes
+app.use('/api/owner', ownerRoutes);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
