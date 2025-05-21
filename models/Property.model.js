@@ -7,16 +7,10 @@ const propertySchema = new mongoose.Schema({
   price: Number,
   address: String,
   blockedDates: [Date],
-  location: {
-    lat: Number,
-    lng: Number
-  },
-  images: [String],
+  city: String,
+  country: String,
+  image: String,
   amenities: [String],
-  availability: {
-    startDate: Date,
-    endDate: Date
-  },
   ownerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
