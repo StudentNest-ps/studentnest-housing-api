@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
-
 const propertySchema = new mongoose.Schema({
   title: String,
   description: String,
   type: { type: String, enum: ['room', 'apartment'] },
   price: Number,
   address: String,
-  blockedDates: [Date],
+  city: String,
+  country: String,
+  availableFrom: String,
+  availableTo: String,
+  maxGuests: String,
   city: String,
   country: String,
   image: String,
