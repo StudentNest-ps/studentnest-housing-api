@@ -122,6 +122,10 @@ const ownerRoutes = require('./routes/owner.route');
 // Use owner routes
 app.use('/api/owner', ownerRoutes);
 
+app.get('/', (req, res) => {
+  res.send('StudentNest backend is running!');
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
