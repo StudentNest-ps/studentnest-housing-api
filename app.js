@@ -10,6 +10,12 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+const cors = require('cors');
+
+app.use(cors({
+  origin: '*', //TODO: specify the frontend url for the deployment
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 // Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected!'))
