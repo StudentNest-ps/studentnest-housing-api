@@ -16,18 +16,47 @@ router.get('/properties/count', async (req, res) => {
   }
 });
 
+// GET /api/owner/:ownerId/properties - Get all properties owned by a specific owner
+router.get('/:ownerId/properties', async (req, res) => {
+  try {
+    // Ensure the owner can only view their own properties
+    // Convert both to strings for comparison to avoid type issues
+    if (req.params.ownerId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ 
+        message: 'You can only view your own properties',
+        debug: {
+          paramOwnerId: req.params.ownerId,
+          userId: req.user.id
+        }
+      });
+    }
+    
+    const properties = await Property.find({ ownerId: req.user.id });
+    res.status(200).json(properties);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching properties', error: error.message });
+  }
+});
+
 // POST /api/owner/:ownerId/properties - Add a new property for a specific owner
 router.post('/:ownerId/properties', async (req, res) => {
   try {
     // Ensure the owner can only add properties for themselves
-    // if (req.params.ownerId !== req.user.id) {
-    //   return res.status(403).json({ message: 'You can only add properties for your own account' });
-    // }
+    // Convert both to strings for comparison to avoid type issues
+    if (req.params.ownerId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ 
+        message: 'You can only add properties for your own account',
+        debug: {
+          paramOwnerId: req.params.ownerId,
+          userId: req.user.id
+        }
+      });
+    }
     
-    // Create the property with the owner ID from the URL
+    // Create the property with the owner ID from the authenticated user (more secure)
     const propertyData = {
       ...req.body,
-      ownerId: req.params.ownerId
+      ownerId: req.user.id // Use the ID from the token instead of URL param
     };
     
     const property = await Property.create(propertyData);
@@ -41,7 +70,7 @@ router.post('/:ownerId/properties', async (req, res) => {
 router.put('/:ownerId/properties/:propertyId', async (req, res) => {
   try {
     // Ensure the owner can only edit their own properties
-    if (req.params.ownerId !== req.user.id) {
+    if (req.params.ownerId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ message: 'You can only edit your own properties' });
     }
     
@@ -54,7 +83,7 @@ router.put('/:ownerId/properties/:propertyId', async (req, res) => {
     }
     
     // Verify ownership
-    if (property.ownerId.toString() !== req.params.ownerId) {
+    if (property.ownerId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ message: 'This property does not belong to you' });
     }
     
