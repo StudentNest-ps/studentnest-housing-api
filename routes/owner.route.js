@@ -97,4 +97,34 @@ router.put('/:ownerId/properties/:propertyId', async (req, res) => {
   }
 });
 
+// DELETE /api/owner/:ownerId/properties/:propertyId - Delete a property
+router.delete('/:ownerId/properties/:propertyId', async (req, res) => {
+  try {
+    // Ensure the owner can only delete their own properties
+    if (req.params.ownerId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'You can only delete your own properties' });
+    }
+    
+    // Find the property
+    const property = await Property.findById(req.params.propertyId);
+    
+    // Check if property exists
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+    
+    // Verify ownership
+    if (property.ownerId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'This property does not belong to you' });
+    }
+    
+    // Delete the property
+    await property.deleteOne();
+    
+    res.status(200).json({ message: 'Property deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete property', error: error.message });
+  }
+});
+
 module.exports = router;
