@@ -126,6 +126,11 @@ app.get('/', (req, res) => {
   res.send('StudentNest backend is running!');
 });
 
+// Import general routes
+const generalRoutes = require('./routes/general.route');
+// Use general routes
+app.use('/api/general', generalRoutes);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
