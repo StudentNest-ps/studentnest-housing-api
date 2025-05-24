@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Property = require('../models/Property.model');
+const { Property, propertyTypes } = require('../models/Property.model');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 // Apply middleware to all routes - must be logged in and an owner
