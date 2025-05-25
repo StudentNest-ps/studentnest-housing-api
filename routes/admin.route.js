@@ -1,6 +1,6 @@
 const express = require('express');
 const User = require('../models/User.model');
-const Property = require('../models/Property.model');
+const { Property } = require('../models/Property.model');
 const Booking = require('../models/booking.model');
 const { protect } = require('../middleware/auth.middleware');
 const { isAdmin } = require('../middleware/admin.middleware');
