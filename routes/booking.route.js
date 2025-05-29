@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Booking = require('../models/booking.model');
-const Property = require('../models/Property.model');
+const { Property } = require('../models/Property.model');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 // (Student) Book a property
@@ -21,6 +21,8 @@ router.post('/', protect, authorize('student'), async (req, res) => {
       if (isNaN(parsedDateFrom) || isNaN(parsedDateTo)) {
         return res.status(400).json({ message: 'Invalid date format. Use ISO format (YYYY-MM-DD).' });
       }
+      
+      console.log('Parsed Dates:',propertyId);
   
       // Optional: Check if property exists
       const property = await Property.findById(propertyId);
