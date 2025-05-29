@@ -9,15 +9,28 @@ require('dotenv').config();
 router.post('/initiate/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const booking = await Booking.findById(bookingId);
 
-    if (!booking) return res.status(404).json({ error: 'booking not found' });
-    if (booking.status === 'success') return res.status(400).json({ detail: 'booking already completed' });
+    // Populate property details
+    const booking = await Booking.findById(bookingId).populate('propertyId');
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    if (['pending', 'cancelled'].includes(booking.status)) {
+      return res.status(400).json({ detail: 'You cannot pay for this booking' });
+    }
+
+    if (!booking.propertyId || typeof booking.propertyId.price !== 'number') {
+      return res.status(400).json({ error: 'Property price not found' });
+    }
+
+    const amountInAgorot = Math.round(booking.propertyId.price * 100); // ILS to agorot
 
     const payload = {
-      amount: String(parseInt(booking.propertyId.price * 100)), // Convert to agorot
+      amount: amountInAgorot.toString(),
       currency: 'ILS',
-      email: "test@gmail.com", // or from auth middleware
+      email: 'test@gmail.com', // Ideally use: req.user.email (if you have auth middleware)
       callback_url: 'https://your-app.com/payment-success',
       webhook_url: 'https://your-app.com/api/payments/webhook'
     };
@@ -34,16 +47,20 @@ router.post('/initiate/:bookingId', async (req, res) => {
     );
 
     const data = response.data.data;
+
+    // Create a new payment record
     const payment = new Payment({
       bookingId: booking._id,
+      studentId: booking.studentId,
       amount: booking.propertyId.price,
       currency: 'ILS',
       status: 'pending',
-      transaction_id : data.reference,
-      transaction_type : 'payment'
+      transaction_id: data.reference,
+      transaction_type: 'payment'
     });
-    // Save transaction ID and status
-    
+
+    await payment.save();
+
     res.json({
       checkout_url: data.authorization_url,
       transaction_id: data.reference
@@ -51,27 +68,38 @@ router.post('/initiate/:bookingId', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Payment initiation failed' });
+    res.status(500).json({ error: 'Payment initiation failed', detail: err?.response?.data || err.message });
   }
 });
 
 // POST /api/payments/webhook
 router.post('/webhook', async (req, res) => {
-  const { transaction_id, status } = req.body;
-
   try {
-    const payment = await Payment.findOne({ transaction_id });
+    const event = req.body;
 
-    if (payment) {
-      payment.status = status;
-      await payment.save();
-      // you may update Booking model if needed
+    console.log(" Lahza Webhook Event:", event);
+
+    if (!event.reference || event.status !== 'success') {
+      return res.status(400).json({ error: 'Invalid webhook event' });
     }
-  } catch (err) {
-    console.error(err);
-  }
 
-  res.json({ detail: 'Webhook processed' });
+    // Find payment by transaction_id (i.e., Lahza reference)
+    const payment = await Payment.findOne({ transaction_id: event.reference });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    // Update payment status
+    payment.status = 'completed';
+    await payment.save();
+
+    res.status(200).json({ message: 'Payment marked as completed' });
+  } catch (err) {
+    console.error("Webhook error:", err);
+    res.status(500).json({ error: 'Webhook processing failed' });
+  }
 });
+
 
 module.exports = router;
