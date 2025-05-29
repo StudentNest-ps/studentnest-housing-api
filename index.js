@@ -115,6 +115,8 @@ app.use('/api/reports', reportRoutes);
 // payment with lahza 
 const lahzaRoutes = require('./routes/lahzapayments.route');
 app.use('/api/lahza', lahzaRoutes);
+app.use('/api/payments', lahzaRoutes);
+
 
 // Import owner routes
 const ownerRoutes = require('./routes/owner.route');

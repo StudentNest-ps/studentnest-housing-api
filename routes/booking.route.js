@@ -70,7 +70,6 @@ router.post('/', protect, authorize('student'), async (req, res) => {
     res.status(500).json({ message: 'Server error.', error: err.message });
   }
 });
-
 // (Student) View my bookings
 router.get('/me', protect, authorize('student'), async (req, res) => {
   try {
