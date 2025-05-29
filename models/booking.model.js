@@ -7,7 +7,7 @@ const bookingSchema = new mongoose.Schema({
   dateTo: { type: Date, required: true },
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'cancelled'], 
+    enum: ['pending', 'confirmed', 'cancelled','already_booked'],
     default: 'pending' 
   }
 }, { timestamps: true });
