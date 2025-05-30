@@ -21,13 +21,16 @@ const formatBooking = (b) => ({
   },
   checkIn: b.dateFrom.toISOString(),
   checkOut: b.dateTo.toISOString(),
-  guests: b.guests ?? 1,
-  totalAmount: b.totalAmount ?? 0,
+  totalAmount: b.totalAmount,
   status: b.status,
   bookingDate: b.createdAt.toISOString()
 });
 
-
+// Helper to calculate number of days between two dates
+const calculateDays = (dateFrom, dateTo) => {
+  const diffTime = Math.abs(dateTo - dateFrom);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
 
 // (Student) Book a property
 router.post('/', protect, authorize('student'), async (req, res) => {
@@ -45,16 +48,44 @@ router.post('/', protect, authorize('student'), async (req, res) => {
       return res.status(400).json({ message: 'Invalid date format. Use ISO format (YYYY-MM-DD).' });
     }
 
+    if (parsedDateFrom >= parsedDateTo) {
+      return res.status(400).json({ message: 'Check-out date must be after check-in date.' });
+    }
+
     const property = await Property.findById(propertyId).populate('ownerId');
     if (!property) {
       return res.status(404).json({ message: 'Property not found.' });
     }
+
+    // Check for existing bookings that overlap with the requested dates
+    const existingBooking = await Booking.findOne({
+      propertyId,
+      status: { $in: ['pending', 'confirmed'] },
+      $or: [
+        {
+          dateFrom: { $lte: parsedDateTo },
+          dateTo: { $gte: parsedDateFrom }
+        }
+      ]
+    });
+
+    if (existingBooking) {
+      return res.status(204).json({ 
+        message: 'This property is already booked for the selected dates.',
+        status: 'already_booked'
+      });
+    }
+
+    // Calculate total amount based on number of days and property price
+    const numberOfDays = calculateDays(parsedDateFrom, parsedDateTo);
+    const totalAmount = property.price * numberOfDays;
 
     const booking = await Booking.create({
       studentId: req.user.id,
       propertyId,
       dateFrom: parsedDateFrom,
       dateTo: parsedDateTo,
+      totalAmount,
       status: 'pending'
     });
 
@@ -70,6 +101,7 @@ router.post('/', protect, authorize('student'), async (req, res) => {
     res.status(500).json({ message: 'Server error.', error: err.message });
   }
 });
+
 // (Student) View my bookings
 router.get('/me', protect, authorize('student'), async (req, res) => {
   try {
