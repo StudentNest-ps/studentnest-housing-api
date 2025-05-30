@@ -5,9 +5,10 @@ const bookingSchema = new mongoose.Schema({
   propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', required: true },
   dateFrom: { type: Date, required: true },
   dateTo: { type: Date, required: true },
+  totalAmount: { type: Number, required: true },
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'cancelled','already_booked'],
+    enum: ['pending', 'confirmed', 'cancelled', 'already_booked'],
     default: 'pending' 
   }
 }, { timestamps: true });
