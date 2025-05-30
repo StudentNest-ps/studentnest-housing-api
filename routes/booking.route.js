@@ -119,7 +119,7 @@ router.get('/me', protect, authorize('student'), async (req, res) => {
       })
       .populate('studentId', 'username email phoneNumber');
 
-    
+    const formatted = bookings.map(formatBooking);
     res.status(200).json(formatted);
   } catch (err) {
     console.error(err);
