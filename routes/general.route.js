@@ -1,14 +1,17 @@
 const express = require('express');
 const User = require('../models/User.model');
+const { protect } = require('../middleware/auth.middleware');
 const router = express.Router();
 
-// GET /api/general/users — Get all users (public endpoint, no auth required)
-router.get('/users', async (req, res) => {
+
+
+// GET /api/general/me — Get current user's data (protected route)
+router.get('/me', protect, async (req, res) => {
   try {
-    const users = await User.find().select('-password');
-    res.status(200).json(users);
+    // req.user is already populated by the protect middleware
+    res.status(200).json(req.user);
   } catch (err) {
-    console.error('Error fetching users:', err);
+    console.error('Error fetching current user:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });

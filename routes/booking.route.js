@@ -19,6 +19,12 @@ const formatBooking = (b) => ({
       email: b.propertyId.ownerId.email
     }
   },
+  student: {
+    id: b.studentId._id.toString(),
+    name: b.studentId.username,
+    email: b.studentId.email,
+    phone: b.studentId.phoneNumber
+  },
   checkIn: b.dateFrom.toISOString(),
   checkOut: b.dateTo.toISOString(),
   totalAmount: b.totalAmount,
@@ -93,7 +99,8 @@ router.post('/', protect, authorize('student'), async (req, res) => {
       .populate({
         path: 'propertyId',
         populate: { path: 'ownerId' }
-      });
+      })
+      .populate('studentId', 'username email phoneNumber');
 
     res.status(201).json(formatBooking(populatedBooking));
   } catch (err) {
@@ -109,9 +116,10 @@ router.get('/me', protect, authorize('student'), async (req, res) => {
       .populate({
         path: 'propertyId',
         populate: { path: 'ownerId' }
-      });
+      })
+      .populate('studentId', 'username email phoneNumber');
 
-    const formatted = bookings.map(formatBooking);
+    
     res.status(200).json(formatted);
   } catch (err) {
     console.error(err);
@@ -129,7 +137,8 @@ router.get('/owner', protect, authorize('owner'), async (req, res) => {
       .populate({
         path: 'propertyId',
         populate: { path: 'ownerId' }
-      });
+      })
+      .populate('studentId', 'username email phoneNumber');
 
     const formatted = bookings.map(formatBooking);
     res.status(200).json(formatted);
@@ -146,13 +155,14 @@ router.delete('/:id', protect, async (req, res) => {
       .populate({
         path: 'propertyId',
         populate: { path: 'ownerId' }
-      });
+      })
+      .populate('studentId', 'username email phoneNumber');
 
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    const studentId = booking.studentId.toString();
+    const studentId = booking.studentId._id.toString();
     const loggedUserId = req.user._id?.toString() || req.user.id;
     const userRole = req.user.role;
 
@@ -166,6 +176,120 @@ router.delete('/:id', protect, async (req, res) => {
     res.status(200).json(formatBooking(booking));
   } catch (err) {
     console.error('Error cancelling booking:', err.message);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// (Owner) Approve a booking and update overlapping bookings
+router.patch('/:id/approve', protect, authorize('owner'), async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate({
+        path: 'propertyId',
+        populate: { path: 'ownerId' }
+      });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Verify that the logged-in user is the owner of the property
+    if (booking.propertyId.ownerId._id.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to approve this booking' });
+    }
+
+    // Update the approved booking status
+    booking.status = 'confirmed';
+    await booking.save();
+
+    // Find and update all overlapping pending bookings to 'already_booked'
+    const overlappingBookings = await Booking.find({
+      propertyId: booking.propertyId._id,
+      _id: { $ne: booking._id },
+      status: 'pending',
+      $or: [
+        {
+          dateFrom: { $lte: booking.dateTo },
+          dateTo: { $gte: booking.dateFrom }
+        }
+      ]
+    });
+
+    // Update all overlapping bookings
+    await Promise.all(
+      overlappingBookings.map(async (overlappingBooking) => {
+        overlappingBooking.status = 'already_booked';
+        await overlappingBooking.save();
+      })
+    );
+
+    const updatedBooking = await Booking.findById(booking._id)
+      .populate({
+        path: 'propertyId',
+        populate: { path: 'ownerId' }
+      });
+
+    res.status(200).json(formatBooking(updatedBooking));
+  } catch (err) {
+    console.error('Error approving booking:', err.message);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// (Owner) Reject a booking
+router.patch('/:id/reject', protect, authorize('owner'), async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate({
+        path: 'propertyId',
+        populate: { path: 'ownerId' }
+      });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Verify that the logged-in user is the owner of the property
+    if (booking.propertyId.ownerId._id.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to reject this booking' });
+    }
+
+    // Update the booking status to rejected
+    booking.status = 'cancelled';
+    await booking.save();
+
+    const updatedBooking = await Booking.findById(booking._id)
+      .populate({
+        path: 'propertyId',
+        populate: { path: 'ownerId' }
+      });
+
+    res.status(200).json(formatBooking(updatedBooking));
+  } catch (err) {
+    console.error('Error rejecting booking:', err.message);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// (Owner) Clean up rejected bookings for their properties
+router.delete('/cleanup/cancelled', protect, authorize('owner'), async (req, res) => {
+  try {
+    // Find all properties owned by the current user
+    const properties = await Property.find({ ownerId: req.user.id }).select('_id');
+    const propertyIds = properties.map(p => p._id);
+
+    // Delete all rejected bookings for these properties
+    const result = await Booking.deleteMany({
+      propertyId: { $in: propertyIds },
+      status: 'cancelled'
+    });
+
+    res.status(200).json({
+      message: 'Successfully cleaned up cancelled bookings',
+      deletedCount: result.deletedCount
+    });
+  } catch (err) {
+    console.error('Error cleaning up cancelled bookings:', err.message);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
