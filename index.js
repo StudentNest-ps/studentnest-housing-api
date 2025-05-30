@@ -75,7 +75,7 @@ app.use('/api/properties', propertyRoutes);
 
 const bookingRoutes = require('./routes/booking.route');
 app.use('/api/bookings', bookingRoutes);
-
+app.use('/api/bookings/me', bookingRoutes);
 // Payment routes
 const paymentRoutes = require('./routes/payment.route');
 app.use('/api/payments', paymentRoutes);
