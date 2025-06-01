@@ -36,7 +36,7 @@ router.post('/initiate/:bookingId', async (req, res) => {
     };
 
     const response = await axios.post(
-      `${process.env.LAHZA_API_URL}/transaction/initialize`,
+      `${process.env.LAHZA_API_URL}transaction/initialize`,
       payload,
       {
         headers: {
