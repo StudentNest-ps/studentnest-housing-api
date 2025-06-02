@@ -31,7 +31,7 @@ router.post('/initiate/:bookingId', async (req, res) => {
       amount: amountInAgorot.toString(),
       currency: 'ILS',
       email: 'test@gmail.com', // Ideally use: req.user.email (if you have auth middleware)
-      callback_url: 'https://your-app.com/payment-success',
+      callback_url: `${process.env.FRONTEND_URL}/payment-success`,
       webhook_url: 'https://your-app.com/api/payments/webhook'
     };
 
