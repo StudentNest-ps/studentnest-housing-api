@@ -1,13 +1,18 @@
 const express = require('express');
 const Notification = require('../models/Notification.model');
 const { protect } = require('../middleware/auth.middleware');
+const mongoose = require('mongoose');
 
 const router = express.Router();
 
 // GET /api/notifications — Get user's notifications
 router.get('/', protect, async (req, res) => {
   try {
-    const notifications = await Notification.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const allNotifications = await Notification.find({});
+  console.log(allNotifications);
+    const notifications = await Notification.find({
+      userId: new mongoose.Types.ObjectId(req.user.id),
+    }).sort({ createdAt: -1 });
     res.status(200).json(notifications);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
