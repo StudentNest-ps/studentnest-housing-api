@@ -17,7 +17,7 @@ router.get('/me', protect, async (req, res) => {
 });
 
 // PATCH /api/general/me — Update current user's username, phoneNumber, or password
-router.patch('/me', protect, async (req, res) => {
+router.put('/me', protect, async (req, res) => {
   try {
     const { username, phoneNumber, password } = req.body;
     const user = await User.findById(req.user._id);
