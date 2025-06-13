@@ -7,15 +7,19 @@ const router = express.Router();
 
 // POST /api/messages — Send a message
 router.post('/', protect, async (req, res) => {
-  const { senderId, receiverId, message, chatId, propertyId } = req.body;
+  const { senderId, receiverId, message, propertyId } = req.body;
 
   try {
-    let chat = chatId
-      ? await Chat.findById(chatId)
-      : await Chat.findOne({ participants: { $all: [senderId, receiverId] } });
+    let chat = await Chat.findOne({
+      participants: { $all: [senderId, receiverId], $size: 2 },
+      propertyId
+    });
 
     if (!chat) {
-      chat = await Chat.create({ participants: [senderId, receiverId] });
+      chat = await Chat.create({
+        participants: [senderId, receiverId],
+        propertyId
+      });
     }
 
     const newMessage = await Message.create({
@@ -29,6 +33,30 @@ router.post('/', protect, async (req, res) => {
     res.status(201).json(newMessage);
   } catch (err) {
     console.error('Message error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//  GET /api/messages/thread?senderId=...&receiverId=...&propertyId=...
+router.get('/thread', protect, async (req, res) => {
+  const { senderId, receiverId, propertyId } = req.query;
+
+  try {
+    if (!senderId || !receiverId || !propertyId) {
+      return res.status(400).json({ message: 'senderId, receiverId, and propertyId are required' });
+    }
+
+    const messages = await Message.find({
+      propertyId,
+      $or: [
+        { senderId, receiverId },
+        { senderId: receiverId, receiverId: senderId }
+      ]
+    }).sort({ createdAt: 1 });
+
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error('Error fetching thread:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -47,16 +75,11 @@ router.get('/:chatId', protect, async (req, res) => {
 // GET /api/messages/property/:propertyId — Get all chats related to a property
 router.get('/property/:propertyId', protect, async (req, res) => {
   try {
-    // Find all messages with the given propertyId
     const messages = await Message.find({ propertyId: req.params.propertyId });
-    
-    // Extract unique chatIds from the messages
-    const chatIds = [...new Set(messages.map(message => message.chatId.toString()))];
-    
-    // Find all the chats with those IDs
+    const chatIds = [...new Set(messages.map(m => m.chatId.toString()))];
     const chats = await Chat.find({ _id: { $in: chatIds } })
       .populate('participants', 'name email profilePicture');
-    
+
     res.status(200).json(chats);
   } catch (err) {
     console.error('Get chats by property error:', err);
