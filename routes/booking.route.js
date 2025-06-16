@@ -64,9 +64,9 @@ router.post('/', protect, authorize('student'), async (req, res) => {
     }
 
     // Check for existing bookings that overlap with the requested dates
-    const existingBooking = await Booking.findOne({
+    const confirmedBooking = await Booking.findOne({
       propertyId,
-      status: { $in: ['pending', 'confirmed'] },
+      status: 'confirmed',
       $or: [
         {
           dateFrom: { $lte: parsedDateTo },
@@ -74,10 +74,10 @@ router.post('/', protect, authorize('student'), async (req, res) => {
         }
       ]
     });
-
-    if (existingBooking) {
-      return res.status(204).json({ 
-        message: 'This property is already booked for the selected dates.',
+    
+    if (confirmedBooking) {
+      return res.status(400).json({ 
+        message: 'This property is already confirmed as booked during the selected dates.',
         status: 'already_booked'
       });
     }
@@ -148,7 +148,8 @@ router.get('/owner', protect, authorize('owner'), async (req, res) => {
   }
 });
 
-// Cancel a booking
+// bookings/:id Cancel a booking
+// bookings/:id — Cancel and remove a booking
 router.delete('/:id', protect, async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
@@ -170,15 +171,15 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(403).json({ message: 'Forbidden: Not authorized to cancel this booking' });
     }
 
-    booking.status = 'cancelled';
-    await booking.save();
+    await booking.deleteOne(); // Deletes the booking from DB
 
-    res.status(200).json(formatBooking(booking));
+    res.status(200).json({ message: 'Booking cancelled and deleted successfully.' });
   } catch (err) {
     console.error('Error cancelling booking:', err.message);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
 
 // (Owner) Approve a booking and update overlapping bookings
 router.patch('/:id/approve', protect, authorize('owner'), async (req, res) => {
