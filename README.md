@@ -63,8 +63,8 @@ package.json    # Project metadata, scripts, dependencies
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/StudentNest-ps/Student-Nest-Backend.git
-   cd Student-Nest-Backend
+   git clone https://github.com/StudentNest-ps/studentnest-housing-api.git
+   cd studentnest-housing-api
    ```
 
 2. **Install dependencies:**
